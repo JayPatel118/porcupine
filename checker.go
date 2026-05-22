@@ -3,6 +3,7 @@ package porcupine
 import (
 	"context"
 	"sort"
+	"fmt"
 	"time"
 )
 
@@ -262,6 +263,9 @@ func checkSingle(ctx context.Context, model Model, history []entry, computeParti
 	// longest linearizable prefix that includes the given entry
 	longest := make([]*[]int, n)
 
+	// Counter for unlift() calls
+	pops := 0
+
 	state := model.Init()
 	headEntry := insertBefore(&node{value: nil, match: nil, id: -1}, entry)
 	for headEntry.next != nil {
@@ -293,6 +297,7 @@ func checkSingle(ctx context.Context, model Model, history []entry, computeParti
 			}
 		} else {
 			if len(calls) == 0 {
+				fmt.Printf("Total_pop: %d\n", pops)
 				return false, longest
 			}
 			// longest
@@ -318,6 +323,7 @@ func checkSingle(ctx context.Context, model Model, history []entry, computeParti
 			linearized.clear(uint(entry.id))
 			calls = calls[:len(calls)-1]
 			unlift(entry)
+			pops++ // increment pop counter
 			entry = entry.next
 		}
 	}
@@ -329,6 +335,7 @@ func checkSingle(ctx context.Context, model Model, history []entry, computeParti
 	for i := 0; i < n; i++ {
 		longest[i] = &seq
 	}
+	fmt.Printf("Total_pop: %d\n", pops)
 	return true, longest
 }
 
